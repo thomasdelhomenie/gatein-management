@@ -141,6 +141,7 @@
       <module>core</module>
       <module>rest</module>
       <module>cli</module>
+      <module>examples</module>
    </modules>
 
    <dependencies>

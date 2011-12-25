@@ -30,5 +30,11 @@ import org.gatein.management.api.ComponentRegistration;
  */
 public interface ExtensionContext
 {
+   /**
+    * Register a managed component
+    * 
+    * @param name the name of the managed component
+    * @return the {@link ComponentRegistration} object responsible for further registration of management resources.
+    */
    ComponentRegistration registerManagedComponent(String name);
 }

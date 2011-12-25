@@ -26,6 +26,7 @@ import org.gatein.management.api.binding.BindingException;
 import org.gatein.management.api.binding.Marshaller;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
+import org.gatein.management.api.operation.model.NoResultModel;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -37,10 +38,14 @@ import java.lang.reflect.Type;
 public abstract class UpdateOperationHandler<T> implements OperationHandler
 {
    @Override
-   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException
+   public final void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException
    {
       OperationAttachment attachment = operationContext.getAttachment(true);
       Class<T> type = getParameterizedType();
+      if (type == null)
+      {
+         throw new RuntimeException("Could not determine parameterized type of subclass " + this.getClass());
+      }
       Marshaller<T> marshaller = operationContext.getBindingProvider().getMarshaller(type, operationContext.getContentType());
 
       if (marshaller == null)
@@ -53,6 +58,7 @@ public abstract class UpdateOperationHandler<T> implements OperationHandler
       try
       {
          execute(operationContext, marshaller.unmarshal(attachment.getStream()));
+         resultHandler.completed(NoResultModel.INSTANCE);
       }
       catch (BindingException e)
       {

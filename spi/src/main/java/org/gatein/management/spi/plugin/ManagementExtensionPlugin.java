@@ -20,30 +20,16 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.gatein.management.spi;
+package org.gatein.management.spi.plugin;
+
+import org.gatein.management.api.exceptions.ManagementException;
 
 /**
- * The main interface for providing a management extension. The extension is looked up via the {@link java.util.ServiceLoader}
- * class, so extensions must provide the META-INF/services convention for loading this interface.
- *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
- * @version $Revision$
  */
-public interface ManagementExtension
+public interface ManagementExtensionPlugin
 {
-   /**
-    * Called when the extension is loaded by the {@link java.util.ServiceLoader} class.
-    *
-    * @param context the extension context for registering a managed component.
-    */
-   void initialize(ExtensionContext context);
+   void initialize(PluginContext context) throws ManagementException;
 
-   /**
-    * This method is to provide extensions the opportunity to release any resources it may have. This method is called
-    * when the {@link org.gatein.management.api.ManagementService#reloadExtensions()} or {@link org.gatein.management.api.ManagementService#unload()}
-    * is invoked.
-    *
-    * <i>Note:</i> This is not called when artifacts are undeployed in the context of an application server.
-    */
-   void destroy();
+   void destroy() throws ManagementException;
 }

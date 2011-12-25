@@ -20,30 +20,23 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.gatein.management.spi;
+package org.gatein.management.api.operation;
+
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.exceptions.ResourceNotFoundException;
 
 /**
- * The main interface for providing a management extension. The extension is looked up via the {@link java.util.ServiceLoader}
- * class, so extensions must provide the META-INF/services convention for loading this interface.
- *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
- * @version $Revision$
  */
-public interface ManagementExtension
+public abstract class AddOperationHandler<T> implements OperationHandler
 {
-   /**
-    * Called when the extension is loaded by the {@link java.util.ServiceLoader} class.
-    *
-    * @param context the extension context for registering a managed component.
-    */
-   void initialize(ExtensionContext context);
+   @Override
+   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException
+   {
+      T data = execute(operationContext);
 
-   /**
-    * This method is to provide extensions the opportunity to release any resources it may have. This method is called
-    * when the {@link org.gatein.management.api.ManagementService#reloadExtensions()} or {@link org.gatein.management.api.ManagementService#unload()}
-    * is invoked.
-    *
-    * <i>Note:</i> This is not called when artifacts are undeployed in the context of an application server.
-    */
-   void destroy();
+      resultHandler.completed(data);
+   }
+   
+   protected abstract T execute(OperationContext operationContext);
 }

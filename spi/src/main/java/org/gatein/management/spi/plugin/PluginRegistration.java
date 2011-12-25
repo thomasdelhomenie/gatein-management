@@ -20,30 +20,30 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.gatein.management.spi;
+package org.gatein.management.spi.plugin;
+
+import org.gatein.management.api.ContentType;
+import org.gatein.management.api.ManagedResource;
+import org.gatein.management.api.PathAddress;
+import org.gatein.management.api.binding.Marshaller;
 
 /**
- * The main interface for providing a management extension. The extension is looked up via the {@link java.util.ServiceLoader}
- * class, so extensions must provide the META-INF/services convention for loading this interface.
- *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
- * @version $Revision$
  */
-public interface ManagementExtension
+public interface PluginRegistration extends ManagedResource.Registration
 {
-   /**
-    * Called when the extension is loaded by the {@link java.util.ServiceLoader} class.
-    *
-    * @param context the extension context for registering a managed component.
-    */
-   void initialize(ExtensionContext context);
+
+   ManagedResource.Registration getRegistration(PathAddress address);
 
    /**
-    * This method is to provide extensions the opportunity to release any resources it may have. This method is called
-    * when the {@link org.gatein.management.api.ManagementService#reloadExtensions()} or {@link org.gatein.management.api.ManagementService#unload()}
-    * is invoked.
+    * Registers a marshaller for a managed component.
+    * 
+    * <i>Note:</i> This will override a management extension's marshaller if one has been registered for the same type
+    * and contentType.
     *
-    * <i>Note:</i> This is not called when artifacts are undeployed in the context of an application server.
+    * @param type the type of class
+    * @param contentType the content type
+    * @param marshaller the marshaller that will be responsible for marshalling and unmarshalling.
     */
-   void destroy();
+   <T> void registerMarshaller(Class<T> type, ContentType contentType, Marshaller<T> marshaller);
 }
