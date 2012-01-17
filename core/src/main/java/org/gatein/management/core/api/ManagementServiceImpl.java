@@ -34,7 +34,6 @@ import org.gatein.management.api.binding.BindingProvider;
 import org.gatein.management.api.binding.Marshaller;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.core.api.binding.GlobalBindingProvider;
-import org.gatein.management.core.api.operation.global.ExportResource;
 import org.gatein.management.core.api.operation.global.GlobalOperationHandlers;
 import org.gatein.management.core.spi.ExtensionContextImpl;
 import org.gatein.management.core.spi.plugin.PluginContextImpl;
@@ -60,12 +59,15 @@ public class ManagementServiceImpl implements ManagementService
    private ManagedResource rootResource;
    private List<ManagementExtension> extensions;
    private Map<String, BindingProvider> bindingProviders;
+   private PluginsMarshallerRegistrar pluginsBindingProvider;
    private BindingProvider globalBindingProvider;
    private List<ManagementExtensionPlugin> plugins;
 
    @Override
    public ManagedResource getManagedResource(PathAddress address)
    {
+      if (rootResource == null) return null;
+
       return rootResource.getSubResource(address);
    }
 
@@ -78,26 +80,37 @@ public class ManagementServiceImpl implements ManagementService
          public <T> Marshaller<T> getMarshaller(Class<T> type, ContentType contentType) throws BindingException
          {
             Marshaller<T> marshaller = null;
+
+            // Check plugin marshallers
+            if (pluginsBindingProvider != null) // This is here for tests to load extensions w/out plugins
+            {
+               marshaller = pluginsBindingProvider.getMarshaller(componentName, type, contentType);
+               if (marshaller != null) return marshaller;
+            }
+
+            // Check extension marshallers
             BindingProvider bp = bindingProviders.get(componentName);
             if (bp != null)
             {
                marshaller = bp.getMarshaller(type, contentType);
             }
-            if (marshaller == null)
-            {
-               marshaller = globalBindingProvider.getMarshaller(type, contentType);
-            }
+            if (marshaller != null) return marshaller;
 
-            return marshaller;
+            // Return any global marshallers
+            return globalBindingProvider.getMarshaller(type, contentType);
          }
       };
    }
 
    @Override
-   public synchronized void reloadExtensions()
+   public void reloadExtensions()
    {
-      unload();
-      load();
+      // Make sure this operation is atomic
+      synchronized (ManagementServiceImpl.class)
+      {
+         unload();
+         load();
+      }
    }
 
    @Override
@@ -105,9 +118,7 @@ public class ManagementServiceImpl implements ManagementService
    {
       log.info("Management service module loading");
 
-      extensions = new ArrayList<ManagementExtension>();
-      plugins = new ArrayList<ManagementExtensionPlugin>();
-
+      // Create root managed resource
       SimpleManagedResource resource = new SimpleManagedResource(null, null, new ManagedDescription()
       {
          @Override
@@ -125,8 +136,6 @@ public class ManagementServiceImpl implements ManagementService
 
       // register global operations
       initGlobalOperations(resource);
-
-      rootResource = resource;
       globalBindingProvider = new GlobalBindingProvider();
    }
 
@@ -134,7 +143,7 @@ public class ManagementServiceImpl implements ManagementService
    public synchronized void unload()
    {
       log.info("Management service module unloading");
-      
+
       boolean debug = log.isDebugEnabled();
       if (plugins != null)
       {
@@ -159,8 +168,9 @@ public class ManagementServiceImpl implements ManagementService
       rootResource = null;
    }
 
-   private void initializeExtensions(SimpleManagedResource resource)
+   void initializeExtensions(SimpleManagedResource resource)
    {
+      List<ManagementExtension> list = new ArrayList<ManagementExtension>();
       Map<String, BindingProvider> map = new HashMap<String, BindingProvider>();
       ExtensionContext context = new ExtensionContextImpl(resource, map);
 
@@ -168,24 +178,32 @@ public class ManagementServiceImpl implements ManagementService
       for (ManagementExtension extension : extensionServiceLoader)
       {
          extension.initialize(context);
-         extensions.add(extension);
+         list.add(extension);
       }
+      
+      extensions = list;
       bindingProviders = map;
-
+      rootResource = resource;
       log.debug("Successfully loaded " + extensions.size() + " management extension(s).");
    }
 
-   private void initializePlugins(SimpleManagedResource resource)
+   void initializePlugins(SimpleManagedResource resource)
    {
-      PluginContext pluginContext = new PluginContextImpl(resource);
+      List<ManagementExtensionPlugin> list = new ArrayList<ManagementExtensionPlugin>();
+
+      PluginsMarshallerRegistrar registrar = new PluginsMarshallerRegistrar();
+      PluginContext pluginContext = new PluginContextImpl(resource, registrar);
       ServiceLoader<ManagementExtensionPlugin> pluginServiceLoader = ServiceLoader.load(ManagementExtensionPlugin.class);
       for (ManagementExtensionPlugin plugin : pluginServiceLoader)
       {
          log.debug("Initializing management extension plugin " + plugin);
          plugin.initialize(pluginContext);
-         plugins.add(plugin);
+         list.add(plugin);
       }
       
+      plugins = list;
+      pluginsBindingProvider = registrar;
+
       log.debug("Successfully loaded " + plugins.size() + " management extension plugin(s).");
    }
 

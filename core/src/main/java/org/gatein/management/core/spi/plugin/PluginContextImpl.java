@@ -27,7 +27,9 @@ import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.binding.Marshaller;
+import org.gatein.management.api.exceptions.ManagementException;
 import org.gatein.management.api.operation.OperationHandler;
+import org.gatein.management.core.api.PluginsMarshallerRegistrar;
 import org.gatein.management.core.api.SimpleManagedResource;
 import org.gatein.management.spi.plugin.PluginContext;
 import org.gatein.management.spi.plugin.PluginRegistration;
@@ -37,47 +39,60 @@ import org.gatein.management.spi.plugin.PluginRegistration;
  */
 public class PluginContextImpl implements PluginContext
 {
-   private final SimpleManagedResource resource;
+   private final SimpleManagedResource root;
+   private final PluginsMarshallerRegistrar registrar;
 
-   public PluginContextImpl(SimpleManagedResource resource)
+   public PluginContextImpl(SimpleManagedResource root, PluginsMarshallerRegistrar registrar)
    {
-      this.resource = resource;
+      this.root = root;
+      this.registrar = registrar;
    }
 
    @Override
-   public PluginRegistration registerPlugin(String managedComponentName, int priority)
+   public PluginRegistration registerPlugin(final String componentName)
    {
+      final SimpleManagedResource componentResource = (SimpleManagedResource) root.getSubResource(componentName);
+
+      if (componentResource == null)
+         throw new ManagementException("Cannot register plugin for managed component " + componentName + " because it does not exist.");
+
       return new PluginRegistration()
       {
          @Override
-         public ManagedResource.Registration getRegistration(PathAddress address)
+         public ManagedResource.Registration subResource(PathAddress address)
          {
-            return (ManagedResource.Registration) resource.getSubResource(address);
+            SimpleManagedResource registration = componentResource;
+            for (String name : address)
+            {
+               registration = (SimpleManagedResource) registration.getSubResource(name);
+               if (registration == null) return null;
+            }
+
+            return registration;
          }
 
          @Override
          public <T> void registerMarshaller(Class<T> type, ContentType contentType, Marshaller<T> marshaller)
          {
-            //TODO: Implement me !
-            throw new UnsupportedOperationException();
+            registrar.registerMarshaller(componentName, type, contentType, marshaller);
          }
 
          @Override
          public ManagedResource.Registration registerSubResource(String name, ManagedDescription description)
          {
-            return resource.registerSubResource(name, description);
+            return componentResource.registerSubResource(name, description);
          }
 
          @Override
          public void registerOperationHandler(String operationName, OperationHandler operationHandler, ManagedDescription description)
          {
-            resource.registerOperationHandler(operationName, operationHandler, description);
+            componentResource.registerOperationHandler(operationName, operationHandler, description);
          }
 
          @Override
          public void registerOperationHandler(String operationName, OperationHandler operationHandler, ManagedDescription description, boolean inherited)
          {
-            resource.registerOperationHandler(operationName, operationHandler, description, inherited);
+            componentResource.registerOperationHandler(operationName, operationHandler, description, inherited);
          }
       };
    }

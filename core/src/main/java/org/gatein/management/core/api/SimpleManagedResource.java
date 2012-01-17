@@ -217,7 +217,27 @@ public class SimpleManagedResource extends AbstractManagedResource
    @Override
    public ManagedResource getSubResource(String childName)
    {
-      return children.get(childName);
+      // Create PathElement to determine if we're looking up by a path template name.
+      PathElement pathElement = PathElement.pathElement(childName);
+      if (pathElement.isTemplate())
+      {
+         // Iterate children
+         for (SimpleManagedResource child : children.values())
+         {
+            PathElement pe = child.pathElement;
+            if (pe.isTemplate() && pe.getTemplateName().equals(pathElement.getTemplateName()))
+            {
+               return child;
+            }
+         }
+
+         // Sorry no child found for template name provided.
+         return null;
+      }
+      else
+      {
+         return children.get(childName);
+      }
    }
 
    @Override

@@ -33,13 +33,18 @@ import org.gatein.management.api.binding.Marshaller;
 public interface PluginRegistration extends ManagedResource.Registration
 {
 
-   ManagedResource.Registration getRegistration(PathAddress address);
+   /**
+    * Get the {@link ManagedResource.Registration} object for a given address.
+    * @param address the address of the subresource. <i>Note:</i> This can include path template variables.
+    * @return the registration associated with the given address, null if none is found.
+    */
+   ManagedResource.Registration subResource(PathAddress address);
 
    /**
     * Registers a marshaller for a managed component.
     * 
-    * <i>Note:</i> This will override a management extension's marshaller if one has been registered for the same type
-    * and contentType.
+    * <i>Note:</i> This will override a management extension's {@link org.gatein.management.api.binding.BindingProvider}
+    * which supplies the marshaller if one has been registered for the same type and contentType.
     *
     * @param type the type of class
     * @param contentType the content type

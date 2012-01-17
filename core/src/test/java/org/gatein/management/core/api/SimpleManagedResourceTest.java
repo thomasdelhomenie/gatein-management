@@ -79,17 +79,34 @@ public class SimpleManagedResourceTest
       SimpleManagedResource root = createRootResource();
       ManagedResource.Registration foo = root.registerSubResource("foo", description("foo description"));
 
-      foo.registerSubResource("bar/{name: [a-zA-Z]*}", description("bar description"));
-      ManagedResource.Registration barname = foo.registerSubResource("bar/{name: [a-zA-Z]*}/foo/{param: .*}", description("bar name description"));
-      barname.registerSubResource("child", description("bar name child description"));
+      ManagedResource.Registration bar = foo.registerSubResource("bar", description("bar description"));
+
+      bar.registerSubResource("{name: [a-zA-Z]*}", description("bar {name} description"));
+      bar.registerSubResource("{name1: [0-9]{3}}", description("bar {name1} description")).
+         registerSubResource("foo/something", description("bar {name1} foo/something description")).
+         registerSubResource("{param: .*}", description("bar {name1} foo/something {param} description")).
+         registerSubResource("child", description("bar {name1} foo/something {param} child description"));
 
       ManagedResource fooResource = root.getSubResource("foo");
       assertNotNull(fooResource);
-      ManagedResource barResource = fooResource.getSubResource("bar/{name: [a-zA-Z]*}");
+
+      ManagedResource barResource = fooResource.getSubResource("bar");
       assertNotNull(barResource);
-      ManagedResource barnameResource = fooResource.getSubResource("bar/{name: [a-zA-Z]*}/foo/{param: .*}");
-      assertNotNull(barnameResource);
-      assertNotNull(barnameResource.getSubResource("child"));
+
+      ManagedResource nameResource = barResource.getSubResource("{name}");
+      assertNotNull(nameResource);
+
+      ManagedResource name1Resource = barResource.getSubResource("{name1}");
+      assertNotNull(name1Resource);
+
+      ManagedResource fooSomething = name1Resource.getSubResource("foo/something");
+      assertNotNull(fooSomething);
+
+      ManagedResource param = fooSomething.getSubResource("{param}");
+      assertNotNull(param);
+
+      ManagedResource child = param.getSubResource("child");
+      assertNotNull(child);
    }
 
    @Test
@@ -98,24 +115,39 @@ public class SimpleManagedResourceTest
       SimpleManagedResource root = createRootResource();
       ManagedResource.Registration foo = root.registerSubResource("foo", description("foo description"));
 
-      foo.registerSubResource("bar/{name: [a-zA-Z]*}", description("bar description"));
-      ManagedResource.Registration barname = foo.registerSubResource("bar/{name: [a-zA-Z]*}/foo/{param: .*}", description("bar name description"));
-      barname.registerSubResource("child", description("bar name child description"));
+      ManagedResource.Registration bar = foo.registerSubResource("bar", description("bar description"));
+      bar.registerSubResource("{name: [a-zA-Z]*}", description("bar {name} description"));
+
+      bar.registerSubResource("{name1: [0-9]{3}}", description("bar {name1} description")).
+         registerSubResource("foo/something", description("bar {name1} foo/something description")).
+         registerSubResource("{param: .*}", description("bar {name1} foo/something {param} description")).
+         registerSubResource("child", description("bar {name1} foo/something {param} child description"));
 
       PathAddress address = PathAddress.pathAddress("foo", "bar", "nick");
       assertNotNull(root.getSubResource(address));
       assertNotNull(root.getResourceDescription(address));
-      assertEquals("bar description", root.getResourceDescription(address).getDescription());
+      assertEquals("bar {name} description", root.getResourceDescription(address).getDescription());
 
-      address = PathAddress.pathAddress("foo", "bar", "nick", "foo", "blah");
+      address = PathAddress.pathAddress("foo", "bar", "123");
       assertNotNull(root.getSubResource(address));
       assertNotNull(root.getResourceDescription(address));
-      assertEquals("bar name description", root.getResourceDescription(address).getDescription());
+      assertEquals("bar {name1} description", root.getResourceDescription(address).getDescription());
 
-      address = PathAddress.pathAddress("foo", "bar", "nick", "foo", "blah", "child");
+      address = PathAddress.pathAddress("foo", "bar", "1234");
+      assertNull(root.getSubResource(address));
+
+      address = PathAddress.pathAddress("foo", "bar", "abc123");
+      assertNull(root.getSubResource(address));
+
+      address = PathAddress.pathAddress("foo", "bar", "781", "foo/something", "^anything here123 *(&*&$^");
       assertNotNull(root.getSubResource(address));
       assertNotNull(root.getResourceDescription(address));
-      assertEquals("bar name child description", root.getResourceDescription(address).getDescription());
+      assertEquals("bar {name1} foo/something {param} description", root.getResourceDescription(address).getDescription());
+
+      address = PathAddress.pathAddress("foo", "bar", "911", "foo/something", "^anything here123 *(&*&$^", "child");
+      assertNotNull(root.getSubResource(address));
+      assertNotNull(root.getResourceDescription(address));
+      assertEquals("bar {name1} foo/something {param} child description", root.getResourceDescription(address).getDescription());
    }
 
    @Test

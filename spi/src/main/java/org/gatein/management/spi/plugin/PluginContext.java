@@ -22,6 +22,8 @@
 
 package org.gatein.management.spi.plugin;
 
+import org.gatein.management.api.exceptions.ManagementException;
+
 /**
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  */
@@ -30,10 +32,10 @@ public interface PluginContext
    /**
     * Registers a plugin for a given managed component.
     *
-    * @param managedComponentName the name of the managed component.
-    * @param priority priority in which this plugin should be loaded. Higher the value sooner it's registered allowing
-    *                 lower priority plugins to register after (overwriting and taking precedence).
+    * @param componentName the name of the managed component.
     * @return the {@link PluginRegistration} object responsible for registering plugin behavior.
+    * @throws org.gatein.management.api.exceptions.ManagementException if the plugin could not be registered. For example
+    * if the componentName does not exist.
     */
-   PluginRegistration registerPlugin(String managedComponentName, int priority);
+   PluginRegistration registerPlugin(String componentName) throws ManagementException;
 }

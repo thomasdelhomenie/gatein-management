@@ -39,6 +39,7 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.UpdateOperationHandler;
 import org.gatein.management.spi.plugin.ManagementExtensionPlugin;
 import org.gatein.management.spi.plugin.PluginContext;
+import org.gatein.management.spi.plugin.PluginRegistration;
 
 /**
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
@@ -48,12 +49,13 @@ public class MopManagementPlugin implements ManagementExtensionPlugin
    @Override
    public void initialize(PluginContext context)
    {
-      ManagedResource.Registration registration = context.registerPlugin("mop", 2000).
-         getRegistration(PathAddress.pathAddress("mop", "{site-type}sites", "{site-name}", "pages"));
+      PluginRegistration registration = context.registerPlugin("mop");
 
-      registration.registerOperationHandler(OperationNames.UPDATE_RESOURCE, new PageUpdateOperationHandler(), description("Updates a page."), true);
+      ManagedResource.Registration pages = registration.
+         subResource(PathAddress.pathAddress("portalsites", "classic", "pages"));
 
-      registration.registerOperationHandler(OperationNames.ADD_RESOURCE, new PageAddOperationHandler(), description("Adds a page."));
+      pages.registerOperationHandler(OperationNames.UPDATE_RESOURCE, new PageUpdateOperationHandler(), description("Updates a page."), true);
+      pages.registerOperationHandler(OperationNames.ADD_RESOURCE, new PageAddOperationHandler(), description("Adds a page."));
    }
 
    @Override

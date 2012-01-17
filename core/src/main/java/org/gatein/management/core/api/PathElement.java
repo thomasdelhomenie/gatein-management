@@ -22,9 +22,6 @@
 
 package org.gatein.management.core.api;
 
-import org.gatein.management.api.PathAddress;
-import org.gatein.management.api.PathTemplateResolver;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -32,10 +29,12 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 /**
+ * An internal class to parse regex's of path templates that belong to a {@link org.gatein.management.api.PathAddress}.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
-public class PathElement
+class PathElement
 {
    private static final String TEMPLATE_NAME_REGEX = "\\w[\\w\\.-]*";
    private static final String TEMPLATE_PARAM_REGEX_REGEX = "[^{}][^{}]*";
@@ -103,6 +102,11 @@ public class PathElement
    public boolean isTemplate()
    {
       return !value.equals(regex);
+   }
+   
+   public String getTemplateName()
+   {
+      return (groups.isEmpty()) ? null : groups.get(0).name;
    }
 
    public boolean matches(String path)
