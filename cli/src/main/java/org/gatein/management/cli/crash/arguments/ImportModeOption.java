@@ -31,6 +31,8 @@ import org.crsh.cmdline.spi.ValueCompletion;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
@@ -44,7 +46,7 @@ public @interface ImportModeOption
 {
    public static class ImportModeCompleter implements Completer
    {
-      public static final String[] modes = {"conserve", "insert", "merge", "overwrite"};
+      public static final List<String> modes = Arrays.asList("conserve", "insert", "merge", "overwrite");
 
       @Override
       public ValueCompletion complete(ParameterDescriptor<?> parameter, String prefix) throws Exception
