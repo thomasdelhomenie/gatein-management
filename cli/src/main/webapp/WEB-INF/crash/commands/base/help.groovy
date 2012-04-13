@@ -20,10 +20,10 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-import org.crsh.command.DescriptionMode
-import org.crsh.command.CRaSHCommand
+import org.crsh.cmdline.annotations.Command
 import org.crsh.cmdline.annotations.Usage
-import org.crsh.cmdline.annotations.Command;
+import org.crsh.command.CRaSHCommand
+import org.crsh.command.DescriptionFormat
 
 class help extends CRaSHCommand
 {
@@ -37,17 +37,17 @@ class help extends CRaSHCommand
     def names = [];
     def descs = [];
     int len = 0;
-    shellContext.listResourceId(org.crsh.plugin.ResourceKind.SCRIPT).each() {
+    shellContext.listResourceId(org.crsh.plugin.ResourceKind.COMMAND).each() {
       String name ->
       try {
         def cmd = shell.getCommand(name);
         if (cmd != null) {
-          def desc = cmd.describe(name, DescriptionMode.DESCRIBE) ?: "";
+          def desc = cmd.describe(name, DescriptionFormat.DESCRIBE) ?: "";
           names.add(name);
           descs.add(desc);
           len = Math.max(len, name.length());
         }
-      } catch (org.crsh.shell.impl.CreateCommandException ignore) {
+      } catch (Exception ignore) {
         //
       }
     }

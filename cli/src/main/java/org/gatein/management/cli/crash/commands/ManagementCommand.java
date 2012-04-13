@@ -26,6 +26,7 @@ import groovy.lang.Closure;
 import org.crsh.cmdline.IntrospectionException;
 import org.crsh.cmdline.ParameterDescriptor;
 import org.crsh.cmdline.spi.Completer;
+import org.crsh.cmdline.spi.ValueCompletion;
 import org.crsh.command.ScriptException;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.controller.ManagedRequest;
@@ -34,11 +35,7 @@ import org.gatein.management.api.controller.ManagementController;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -53,7 +50,7 @@ public class ManagementCommand extends GateInCommand implements Completer
    }
 
    @Override
-   public Map<String, Boolean> complete(ParameterDescriptor<?> parameter, String prefix) throws Exception
+   public ValueCompletion complete(ParameterDescriptor<?> parameter, String prefix) throws Exception
    {
       try
       {
@@ -62,7 +59,7 @@ public class ManagementCommand extends GateInCommand implements Completer
       }
       catch (ScriptException e)
       {
-         return Collections.emptyMap();
+         return ValueCompletion.create();
       }
 
       Closure closure = (Closure) getProperty("begin");
@@ -102,7 +99,7 @@ public class ManagementCommand extends GateInCommand implements Completer
             }
 
             Set<String> children = getChildren(controller, address);
-            Map<String, Boolean> completions = new HashMap<String, Boolean>(children.size());
+            ValueCompletion completions = ValueCompletion.create();
             for (String child : children)
             {
                if (child.charAt(0) == '/') child = child.substring(1);
@@ -126,18 +123,14 @@ public class ManagementCommand extends GateInCommand implements Completer
 
             return completions;
          }
-
-         return Collections.emptyMap();
-      }
-      catch (Exception e)
-      {
-         return Collections.emptyMap();
       }
       finally
       {
          closure = (Closure) getProperty("end");
          closure.call();
       }
+
+      return ValueCompletion.create();
    }
 
    protected PathAddress getAddress(PathAddress currentAddress, String path)

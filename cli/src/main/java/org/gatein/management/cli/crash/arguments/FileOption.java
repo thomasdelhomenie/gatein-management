@@ -25,6 +25,7 @@ package org.gatein.management.cli.crash.arguments;
 import org.crsh.cmdline.annotations.Man;
 import org.crsh.cmdline.annotations.Option;
 import org.crsh.cmdline.annotations.Usage;
+import org.crsh.cmdline.completers.FileCompleter;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -34,7 +35,7 @@ import java.lang.annotation.RetentionPolicy;
  * @version $Revision$
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Option(names = {"f", "file"})
+@Option(names = {"f", "file"}, completer = FileCompleter.class)
 @Usage("File name")
 @Man("File name")
 public @interface FileOption

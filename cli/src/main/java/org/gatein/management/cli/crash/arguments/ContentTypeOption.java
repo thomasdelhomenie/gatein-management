@@ -22,17 +22,17 @@
 
 package org.gatein.management.cli.crash.arguments;
 
-import org.crsh.cmdline.EnumCompleter;
+
 import org.crsh.cmdline.ParameterDescriptor;
 import org.crsh.cmdline.annotations.Man;
 import org.crsh.cmdline.annotations.Option;
 import org.crsh.cmdline.annotations.Usage;
+import org.crsh.cmdline.completers.EnumCompleter;
+import org.crsh.cmdline.spi.ValueCompletion;
 import org.gatein.management.api.ContentType;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
@@ -47,10 +47,10 @@ public @interface ContentTypeOption
    public static class ContentTypeCompleter extends EnumCompleter
    {
       @Override
-      public Map<String, Boolean> complete(ParameterDescriptor<?> parameter, String prefix) throws Exception
+      public ValueCompletion complete(ParameterDescriptor<?> parameter, String prefix) throws Exception
       {
          ContentType[] cts = ContentType.values();
-         Map<String, Boolean> completions = new HashMap<String, Boolean>(cts.length);
+         ValueCompletion completions = ValueCompletion.create();
          for (ContentType ct : cts)
          {
             String value = ct.getName();

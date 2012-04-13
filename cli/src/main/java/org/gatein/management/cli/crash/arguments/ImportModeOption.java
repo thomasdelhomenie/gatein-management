@@ -27,15 +27,10 @@ import org.crsh.cmdline.annotations.Man;
 import org.crsh.cmdline.annotations.Option;
 import org.crsh.cmdline.annotations.Usage;
 import org.crsh.cmdline.spi.Completer;
+import org.crsh.cmdline.spi.ValueCompletion;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
@@ -49,12 +44,12 @@ public @interface ImportModeOption
 {
    public static class ImportModeCompleter implements Completer
    {
-      public static final Set<String> modes = new HashSet<String>(Arrays.asList("conserve", "insert", "merge", "overwrite"));
+      public static final String[] modes = {"conserve", "insert", "merge", "overwrite"};
 
       @Override
-      public Map<String, Boolean> complete(ParameterDescriptor<?> parameter, String prefix) throws Exception
+      public ValueCompletion complete(ParameterDescriptor<?> parameter, String prefix) throws Exception
       {
-         Map<String, Boolean> completions = new HashMap<String, Boolean>(modes.size());
+         ValueCompletion completions = ValueCompletion.create();
          for (String mode : modes)
          {
             if ("".equals(prefix))
